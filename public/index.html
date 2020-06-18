@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <style media="screen">
+      .card-header, .card-footer{
+        background-color: #fff;
+      }
+    </style>
+    <title></title>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script> -->
+
+    <!-- <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"
+      integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4="
+      crossorigin="anonymous"
+    ></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="your-username">
+        <b>Your Username: </b><%= data.username %>
+      </div>
+      <div class="row">
+        <div class="card col-md-3 p-0 m-3">
+          <div class="card-header">
+            <span>Active Users</span>
+          </div>
+          <div class="card-body">
+            <div class="user-list" id="user-list">
+            </div>
+          </div>
+        </div>
+        <!--  ---------->
+        <div class="card col-md-5 p-0 m-3">
+          <div class="card-header">
+            <span id="user-id"></span>
+          </div>
+          <div class="card-body">
+            <div class="chat-history" id="chat-history">
+
+            </div>
+          </div>
+          <div class="card-footer">
+            <form>
+              <div class="form-row col-md-12">
+                <div class="form-group col-md-7">
+                  <input type="text" class="form-control" id="message" name="message"/>
+                </div>
+                <div class="form-group col-md-5">
+                  <button type="button" id="send" class="btn-success" name="button">Send</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      // let socket = io.connect('http://localhost:4000/');
+      let socket = io();
+      const loginId = '<%= data.id %>';
+      $(document).ready(()=>{
+        $('#send').click(()=>{
+          const message = $('#message').val();
+          socket.emit('send-message',{
+            chatId:'1234',
+            message:message
+          });
+        });
+        $(document.body).on('click', '.activeUser', function(){
+          const chatId = $(this).val();
+          const chatUsername = $(this).text();
+          socket.emit('chat', {
+            id: chatId
+          });
+          $('#user-id').text(chatUsername);
+        });
+      });
+
+      socket.emit('getAllUser', {
+        userId: loginId
+      });
+      
+      socket.on('check', (data)=>{
+        if(data === 'server error'){
+          // alert();
+        } else {
+          $('#user-list').html(null)
+          var ul = $('<ul>').appendTo('#user-list');
+          $(data).each(function(index, item) {
+            ul.append(
+                $(document.createElement('li')).append(
+                  $('<button>').attr({
+                    class: 'btn btn-outline-dark pt-0 pb-0 activeUser',
+                    value: item.chat_id
+                  }).text(item.username)
+                )
+            );
+        });
+        }
+      })
+      // socket.on('chatDetails', data=>{
+      //   // alert(JSON.stringify(data));
+      //   $('#user-id').text(data.user);
+      // })
+      // socket.emit('message-history', {
+      //   userId:user
+      // });
+      // function chatHistory(){
+        socket.on('chat-history', (data) => {
+          // alert();
+          // if(true){
+          //   return false;
+          // } else {
+            console.log(data);
+            $('#chat-history').empty();
+            for (var i = 0; i < data.length; i++) {
+              let x = data[i];
+              $('#chat-history').append(
+                $('<div>').append(
+                $('<p>').html('<b>' + x.sent_by + ':</b> ' + x.message)
+              ));
+            }
+          // }
+        });
+      // }
+      // socket.on('output', (data)=>{
+      //   alert(data.item2);
+      // });
+    </script>
+  </body>
+</html>
